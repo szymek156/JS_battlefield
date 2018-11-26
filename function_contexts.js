@@ -112,7 +112,7 @@ var fun = 3;
 assert(typeof fun === "number", "Now we access the number");
 // assert widzi fun jako liczbe
 
-function fun(){}
+function fun() {}
 // kod sie nie wykonuje, to tylko deklaracja, nie ma tworzenia kontekstu,
 // linia jest pomijana
 
@@ -120,3 +120,15 @@ assert(typeof fun === "number", "Still a number");
 // assert widzi fun jako liczbe
 
 fun(); // error nie ma takiej funkcji
+
+
+function Ninja() {
+    var feints = 0;
+    this.getFeints = function () {
+        return feints;
+    };
+    this.feint = function () {
+        feints++;
+    };
+}
+var ninja1 = new Ninja();
