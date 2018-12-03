@@ -21,6 +21,8 @@ let httpsServerOptions = {
     cert : fs.readFileSync("./https/cert.pem")
 };
 
+console.log(httpsServerOptions);
+
 let httpsServer = https.createServer(httpsServerOptions, unifiedServer);
 
 httpsServer.listen(config.httpsPort, function() {
@@ -29,8 +31,8 @@ httpsServer.listen(config.httpsPort, function() {
 
 // Define handlers
 var handlers = {};
-handlers.sample = function(data, callback) {
-    callback(406, {"name" : "sample payload"});
+handlers.ping = function(data, callback) {
+    callback(200);
 };
 
 handlers.notFound = function(data, callback) {
@@ -39,7 +41,7 @@ handlers.notFound = function(data, callback) {
 
 // Define request router
 let router = {
-    "sample" : handlers.sample
+    "ping" : handlers.ping
 };
 
 function unifiedServer(req, res) {
