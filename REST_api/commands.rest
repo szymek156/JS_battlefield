@@ -1,0 +1,18 @@
+CURL -X GET http://localhost:3000
+
+###
+CURL -X GET http://localhost:3000//foo/bar//
+
+###
+
+CURL -X GET http://localhost:3000//foo/bar?key=value&prop=123
+
+###
+POST http://localhost:3000//foo/bar?key=value&prop=123
+Content-Type: text/plain
+foo: bar
+
+This is payload
+
+###
+CURL -X GET http://localhost:3000/sample

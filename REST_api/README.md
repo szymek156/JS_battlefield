@@ -1,0 +1,1 @@
+docker run --rm -ti  -v C:\\DIY\\JS\\JS_battlefield:/JS -p 3000:3000 node /bin/bash
