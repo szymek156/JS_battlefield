@@ -1,48 +1,53 @@
 // Dependencies
-const http = require("http");
-const https = require("https");
-const url = require("url");
+const http          = require("http");
+const https         = require("https");
+const url           = require("url");
 const StringDecoder = require("string_decoder").StringDecoder;
-const fs = require("fs");
+const fs            = require("fs");
+const _data         = require("./lib/data");
 
 const config = require("./config");
+
+// _data.delete("test", "testFile", function(err, data) { console.log("remove with status ", err); });
+// _data.create("test", "testFile", {prop : "value"}, function(err) { console.log("failed with error ", err); });
+// _data.updatePromise("test", "testFile", {prop2 : "other value"},
+//                     function(err) { console.log("failed with error ", err); });
+
+// _data.updatePromise2("test", "testFile", {prop2 : "other value promise2"},
+//                      function(err) { console.log("failed with error ", err); });
+
+_data.updatePromise3("test", "testFile", {prop2 : "other value promise3"},
+                     function(err) { console.log("failed with error ", err); });
+// _data.update("test", "testFile", {prop2 : "other value"}, function(err) { console.log("failed with error ", err); });
+// _data.read("test", "testFile", function(err, data) { console.log("read with status ", err, " data ", data); });
+// _data.delete("test", "testFile", function(err, data) { console.log("remove with status ", err); });
 
 // HTTP
 let httpServer = http.createServer(unifiedServer);
 
-httpServer.listen(config.httpPort, function() {
-    console.log(`Server is listening on port ${config.httpPort} in ${config.envName} mode`);
-});
-
+httpServer.listen(
+    config.httpPort,
+    function() { console.log(`Server is listening on port ${config.httpPort} in ${config.envName} mode`); });
 
 // HTTPS
-let httpsServerOptions = {
-    key : fs.readFileSync("./https/key.pem"),
-    cert : fs.readFileSync("./https/cert.pem")
-};
+let httpsServerOptions = {key : fs.readFileSync("./https/key.pem"), cert : fs.readFileSync("./https/cert.pem")};
 
 console.log(httpsServerOptions);
 
 let httpsServer = https.createServer(httpsServerOptions, unifiedServer);
 
-httpsServer.listen(config.httpsPort, function() {
-    console.log(`Server is listening on port ${config.httpsPort} in ${config.envName} mode`);
-});
+httpsServer.listen(
+    config.httpsPort,
+    function() { console.log(`Server is listening on port ${config.httpsPort} in ${config.envName} mode`); });
 
 // Define handlers
-var handlers = {};
-handlers.ping = function(data, callback) {
-    callback(200);
-};
+var handlers  = {};
+handlers.ping = function(data, callback) { callback(200); };
 
-handlers.notFound = function(data, callback) {
-    callback(404);
-};
+handlers.notFound = function(data, callback) { callback(404); };
 
 // Define request router
-let router = {
-    "ping" : handlers.ping
-};
+let router = {"ping" : handlers.ping};
 
 function unifiedServer(req, res) {
 
@@ -52,7 +57,7 @@ function unifiedServer(req, res) {
     let path = parsedUrl.pathname;
 
     // Trim leading or following slashes
-    path = path.replace(/^\/+|\/+$/g, "");
+    path       = path.replace(/^\/+|\/+$/g, "");
     let method = req.method.toLowerCase();
 
     // Puts address query in nice object literal
@@ -72,9 +77,7 @@ function unifiedServer(req, res) {
     let buffer = "";
 
     // When chunk of data is ready, append it to the buffer
-    req.on("data", function (data) {
-        buffer += decoder.write(data);
-    });
+    req.on("data", function(data) { buffer += decoder.write(data); });
 
     // End is always called, even if there is no payload
     req.on("end", function() {
@@ -83,19 +86,13 @@ function unifiedServer(req, res) {
         console.log(`palyoad: ${buffer}`);
     });
 
-
     // Route requests
     let handler = path in router ? router[path] : handlers.notFound;
 
-    var data = {
-        "trimmedPath" : path,
-        "quesyStringObject" : query,
-        "method" : method,
-        "headers" : headers,
-        "payload" : buffer
-    };
+    var data =
+        {"trimmedPath" : path, "quesyStringObject" : query, "method" : method, "headers" : headers, "payload" : buffer};
 
-    handler(data, function(statusCode, payload={}) {
+    handler(data, function(statusCode, payload = {}) {
         let payloadResponse = JSON.stringify(payload);
 
         res.setHeader("Content-Type", "application/json");
