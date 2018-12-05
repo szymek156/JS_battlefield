@@ -1,11 +1,13 @@
-const fs   = require("fs");
-const path = require("path");
-const util = require("util");
+const fs      = require("fs");
+const path    = require("path");
+const util    = require("util");
+const helpers = require("./helpers");
 // TESTING
-// _data.create("test", "testFile", {prop : "value"}, function(err) { console.log("failed with error ", err); });
-// _data.update("test", "testFile", {prop2 : "other value"}, function(err) { console.log("failed with error ", err); });
-// _data.read("test", "testFile", function(err, data) { console.log("read with status ", err, " data ", data); });
-// _data.delete("test", "testFile", function(err, data) { console.log("remove with status ", err); });
+// _data.create("test", "testFile", {prop : "value"}, function(err) { console.log("failed with error
+// ", err); }); _data.update("test", "testFile", {prop2 : "other value"}, function(err) {
+// console.log("failed with error ", err); }); _data.read("test", "testFile", function(err, data) {
+// console.log("read with status ", err, " data ", data); }); _data.delete("test", "testFile",
+// function(err, data) { console.log("remove with status ", err); });
 
 var lib = {
     baseDir : path.join(__dirname, "/../.data"),
@@ -17,7 +19,7 @@ var lib = {
                     if (!err) {
                         fs.close(fd, function(err) {
                             if (!err) {
-                                callback("File create succesfully");
+                                callback(false);
                             } else {
                                 callback("Error closing file");
                             }
@@ -33,8 +35,16 @@ var lib = {
         });
     },
 
-    read : function(dir, file,
-                    callback) { fs.readFile(path.join(lib.baseDir, dir, file + ".json"), "utf8", callback); },
+    read : function(dir, file, callback) {
+        fs.readFile(path.join(lib.baseDir, dir, file + ".json"), "utf8", function(err, data) {
+            if (!err && data) {
+                let parsedData = helpers.parseJsonToObject(data);
+                callback(false, parsedData);
+            } else {
+                callback(err, data);
+            }
+        });
+    },
 
     update : function(dir, file, data, callback) {
         fs.open(path.join(lib.baseDir, dir, file + ".json"), "r+", function(err, fd) {
@@ -47,7 +57,7 @@ var lib = {
                             if (!err) {
                                 fs.close(fd, function(err) {
                                     if (!err) {
-                                        callback("Update OK");
+                                        callback(false);
                                     } else {
                                         callback("Fail during closing a file");
                                     }
@@ -69,7 +79,7 @@ var lib = {
     delete : function(dir, file, callback) {
         fs.unlink(path.join(lib.baseDir, dir, file + ".json"), function(err) {
             if (!err) {
-                callback("File removed");
+                callback(false);
             } else {
                 callback(`Failed removing a file ${err}`);
             }
@@ -110,9 +120,9 @@ lib.updatePromise = function(dir, file, data, callback) {
 };
 
 lib.updatePromise2 = function(dir, file, data) {
-    // Awesomness of node gives possibility to promisify functions with callback definition (err, value) well, not all
-    // of them has it, write has (err, written, buffer), but it seems to work, due to the fact JS is extremly dynamic
-    // language
+    // Awesomness of node gives possibility to promisify functions with callback definition (err,
+    // value) well, not all of them has it, write has (err, written, buffer), but it seems to work,
+    // due to the fact JS is extremly dynamic language
 
     let open      = util.promisify(fs.open);
     let ftruncate = util.promisify(fs.ftruncate);
