@@ -1,5 +1,6 @@
 
 const _data   = require("./data");
+const _datap  = require("./datap");
 const helpers = require("./helpers");
 
 // Define handlers
@@ -44,7 +45,8 @@ handlers._users.post = function(data, callback) {
                         lastName : lastName,
                         phone : phone,
                         password : hashedPswd,
-                        tosAgreement : true
+                        tosAgreement : true,
+                        checks : []
                     };
 
                     _data.create("users", phone, userObject, function(err) {
@@ -160,7 +162,7 @@ handlers._users.delete = function(data, callback) {
     }
 };
 
-handlers.users = function(data, callback) {
+handlers.tokens = function(data, callback) {
     let methods = [ "post", "get", "put", "delete" ];
 
     if (methods.find((elem) => elem === data.method)) {
@@ -170,11 +172,11 @@ handlers.users = function(data, callback) {
     }
 };
 
-let _tokens = {};
+handlers._tokens = {};
 
 // Req data: phone, password
 // Opt data: none
-_tokens.post = function(data, callback) {
+handlers._tokens.post = function(data, callback) {
     var phone    = data.payload.phone;
     var password = data.payload.password;
 
@@ -199,13 +201,94 @@ _tokens.post = function(data, callback) {
     }
 };
 
-_tokens.get = function(data, callback) {
+handlers._tokens.get = function(data, callback) {
 
 };
-_tokens.put = function(data, callback) {
+handlers._tokens.put = function(data, callback) {
 
 };
-_tokens.delete = function(data, callback) {
+handlers._tokens.delete = function(data, callback) {
+
+};
+
+handlers.checks = function(data, callback) {
+    let methods = [ "post", "get", "put", "delete" ];
+
+    if (methods.find((elem) => elem === data.method)) {
+        handlers._checks[data.method](data, callback);
+    } else {
+        callback(405);
+    }
+};
+
+handlers._checks = {};
+
+handlers._checks._validateParameter = function(parameter, type, possibleValues = [],
+                                               instance = undefined) {
+    if (typeof (parameter) !== type) {
+        return false;
+    }
+
+    if (typeof (parameter) === "string") {
+        parameter = parameter.trim();
+        if (parameter.length == 0) {
+            return false;
+        }
+    }
+
+    if (possibleValues.length > 0) {
+        if (possibleValues.indexOf(parameter) == -1) {
+            return false;
+        }
+    }
+
+    if (instance && !parameter instanceof instance) {
+        return false;
+    }
+
+    return parameter;
+};
+
+// Req params: protocol, url, method successCodes, timeoutSeconds
+// Opt params: none
+handlers._checks.post = async function(data, callback) {
+    let protocol =
+        handlers._checks._validateParameter(data.payload.protocol, "string", [ "http", "https" ]);
+    let url    = handlers._checks._validateParameter(data.payload.url, "string");
+    let method = handlers._checks._validateParameter(data.payload.method, "string",
+                                                     [ "post", "get", "put", "delete" ]);
+    let successCodes =
+        handlers._checks._validateParameter(data.payload.successCodes, "object", [], Array);
+    let timeoutSeconds = handlers._checks._validateParameter(data.payload.timeoutSeconds, "number");
+
+    if (protocol && url && method && successCodes && timeoutSeconds) {
+        // Get token from headers
+        // let token     = handlers._checks._validateParameter(data.headers.token, "string");
+        // let tokenData = await _datap.read("tokens", token);
+
+        try {
+            let userPhone = "0-700-88-01-88";  // tokenData.phone;
+            let userData  = await _datap.read("users", userPhone);
+
+            callback(200, userData);
+        } catch (err) {
+            callback(400, err);
+        }
+
+    } else {
+        callback(400, {Error : "Incorrect post request"});
+    }
+};
+
+handlers._checks.get = function(data, callback) {
+
+};
+
+handlers._checks.put = function(data, callback) {
+
+};
+
+handlers._checks.delete = function(data, callback) {
 
 };
 

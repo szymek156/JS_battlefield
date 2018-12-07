@@ -105,4 +105,9 @@ function unifiedServer(req, res) {
 }
 
 // Define request router
-let router = {"ping" : handlers.ping, "users" : handlers.users, "tokens" : handlers.tokens};
+let router = {
+    "ping" : handlers.ping,
+    "users" : handlers.users,
+    "tokens" : handlers.tokens,
+    "checks" : handlers.checks
+};

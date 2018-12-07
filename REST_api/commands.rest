@@ -1,3 +1,16 @@
+
+POST http://localhost:3000/checks
+Content-Type: application/json
+
+{
+    "protocol" : "http",
+    "url" : "www.google.com",
+    "method" : "get",
+    "successCodes" : [200],
+    "timeoutSeconds" : 1
+}
+
+###
 POST http://localhost:3000/users
 Content-Type: application/json
 
@@ -14,7 +27,7 @@ GET http://localhost:3000/users
 Content-Type: application/json
 
 {
-    "phone" : "0-700-88-01-98"
+    "phone" : "0-700-88-01-88"
 }
 
 ###
