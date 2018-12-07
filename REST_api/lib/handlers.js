@@ -22,18 +22,18 @@ handlers.users = function(data, callback) {
 
 handlers._users = {};
 
-// data: firstName, lastName, phone, password, tosAgreement
+// data: firstName, lastName, id, password, tosAgreement
 // optional: none
 handlers._users.post = function(data, callback) {
     let firstName    = data.payload.firstName;
     let lastName     = data.payload.lastName;
-    let phone        = data.payload.phone;
+    let id        = data.payload.id;
     let password     = data.payload.password;
     let tosAgreement = data.payload.tosAgreement;
 
-    if (firstName && lastName && phone && password && tosAgreement) {
+    if (firstName && lastName && id && password && tosAgreement) {
         // Make sure, that user doesn't exists
-        _data.read("users", phone, function(err, data) {
+        _data.read("users", id, function(err, data) {
             if (err) {
                 // Not exist, which is good
                 // Hash the password
@@ -43,13 +43,13 @@ handlers._users.post = function(data, callback) {
                     let userObject = {
                         firstName : firstName,
                         lastName : lastName,
-                        phone : phone,
+                        id : id,
                         password : hashedPswd,
                         tosAgreement : true,
                         checks : []
                     };
 
-                    _data.create("users", phone, userObject, function(err) {
+                    _data.create("users", id, userObject, function(err) {
                         if (!err) {
                             callback(200);
                         } else {
@@ -71,7 +71,6 @@ handlers._users.post = function(data, callback) {
 
 // Required data: phone
 // Optional data: none
-// @TODO let only authorized users to read
 handlers._users.get = function(data, callback) {
     var phone = data.payload.phone;
 
@@ -80,14 +79,24 @@ handlers._users.get = function(data, callback) {
     }
 
     if (phone) {
-        _data.read("users", phone, function(err, data) {
-            if (!err && data) {
-                // Delete password property
-                delete data.password;
-
-                callback(200, data);
-            } else {
-                callback(404, {"Error" : "User not exists"});
+        // Get token from the headers
+        let token = data.headers.token;
+        
+        handlers._tokens.verifyToken(token, phone, function(tokenIsValid) {
+            if (tokenIsValid) {
+                _data.read("users", phone, function(err, data) {
+                    if (!err && data) {
+                        // Delete password property
+                        delete data.password;
+        
+                        callback(200, data);
+                    } else {
+                        callback(404, {"Error" : "User not exists"});
+                    }
+                });
+            }
+            else {
+                callback(403, {"Error" : "Unauthorized access"});
             }
         });
     } else {
@@ -95,43 +104,51 @@ handlers._users.get = function(data, callback) {
     }
 };
 
-// Required data: phone
+// Required data: id
 // Optional data: firstName, lastName, password, at least one has to be present)
-// @TODO let only authorized users to put
 handlers._users.put = function(data, callback) {
     let phone = data.payload.phone;
+    let firstName = data.payload.firstName;
+    let lastName  = data.payload.lastName;
+    let password  = data.payload.password;
+
+    let token = data.headers.token;
+
     if (phone) {
-        let firstName = data.payload.firstName;
-        let lastName  = data.payload.lastName;
-        let password  = data.payload.password;
-
-        if (firstName || lastName || password) {
-            _data.read("users", phone, function(err, data) {
-                if (!err && data) {
-                    if (firstName) {
-                        data.firstName = firstName;
-                    }
-                    if (lastName) {
-                        data.lastName = lastName;
-                    }
-                    if (password) {
-                        data.password = helpers.hash(password);
-                    }
-
-                    _data.update("users", phone, data, function(err) {
-                        if (!err) {
-                            callback(200, data);
+        handlers._tokens.verifyToken(token, phone, function(tokenIsValid) {
+            if (tokenIsValid) {
+                if (firstName || lastName || password) {
+                    _data.read("users", phone, function(err, data) {
+                        if (!err && data) {
+                            if (firstName) {
+                                data.firstName = firstName;
+                            }
+                            if (lastName) {
+                                data.lastName = lastName;
+                            }
+                            if (password) {
+                                data.password = helpers.hash(password);
+                            }
+        
+                            _data.update("users", phone, data, function(err) {
+                                if (!err) {
+                                    callback(200, data);
+                                } else {
+                                    callback(500, {"Error" : "Failed to update user"});
+                                }
+                            });
                         } else {
-                            callback(500, {"Error" : "Failed to update user"});
+                            callback(400, {"Error" : "User not present"});
                         }
                     });
                 } else {
-                    callback(400, {"Error" : "User not present"});
+                    callback(400, {"Error" : "Missing parameters"});
                 }
-            });
-        } else {
-            callback(400, {"Error" : "Missing parameters"});
-        }
+            }
+            else {
+                callback(403, {"Error" : "Unauthorized access"});
+            }
+        });
     } else {
         callback(400, {"Error" : "Invalid put request"});
     }
@@ -140,12 +157,12 @@ handlers._users.put = function(data, callback) {
 // TODO: only auth users
 // TODO: cleanup associated data
 handlers._users.delete = function(data, callback) {
-    var phone = data.payload.phone;
+    var id = data.payload.id;
 
-    if (phone) {
-        _data.read("users", phone, function(err, data) {
+    if (id) {
+        _data.read("users", id, function(err, data) {
             if (!err && data) {
-                _data.delete("users", phone, function(err) {
+                _data.delete("users", id, function(err) {
                     if (!err) {
                         callback(200, data);
                     } else {
@@ -174,19 +191,37 @@ handlers.tokens = function(data, callback) {
 
 handlers._tokens = {};
 
-// Req data: phone, password
+// Req data: id, password
 // Opt data: none
 handlers._tokens.post = function(data, callback) {
     var phone    = data.payload.phone;
     var password = data.payload.password;
 
     if (phone && password) {
-        _data.read("users", phone, function(err, data) {
+        _data.read("users", id, function(err, data) {
             if (!err && data) {
                 // Delete password property
 
                 let hashed = helpers.hash(password);
                 if (hashed === data.password) {
+
+                    let tokenId = helpers.createRandomString(20);
+
+                    let expires = Date.now() + 1000 *60 *60;
+                    let tokenObject = {
+                        phone: phone,
+                        id: tokenId,
+                        expires: expires
+                    };
+
+                    _data.create("tokens", tokenId, tokenObject, function (err) {
+                        if (!err) {
+                            callback(200, tokenObject);
+                        } else {
+                            callback(500, {"Error" : "Unable to create token"});
+                        }
+                    });
+
 
                 } else {
                     callback(400, {"Error" : "Incorrect password"});
@@ -201,15 +236,100 @@ handlers._tokens.post = function(data, callback) {
     }
 };
 
+// Req data: id
+// Opt data: none
 handlers._tokens.get = function(data, callback) {
+    let id = data.queryStringObject.id;
 
+    if (id) {
+        _data.read("tokens", id, function(err, data) {
+            if (!err && data) {
+                
+                callback(200, data);
+            } else {
+                callback(404, {"Error" : "Token not exists"});
+            }
+        });
+    } else {
+        callback(400, {"Error" : "Invalid get request"});
+    }
 };
+
+// Req data: id, extend
+// Opt data: none
 handlers._tokens.put = function(data, callback) {
+    var id    = data.payload.id;
+    var extend = typeof(data.payload.extend) == "boolean" ? data.payload.extend : false;
 
+    if (id && extend) {
+        _data.read("tokens", id, function(err, token) {
+            if (!err && token) {
+
+                // Check if token is not already expried
+                if (token.expires > Date.now()) {
+                    token.expires = Date.now() + 1000 * 60 * 60;
+
+                    _data.update("tokens", id, token, function (err) {
+                        if (!err) {
+                            callback(200);
+                        } else {
+                            callback(500, {"Error" : "Unable to update token"});
+                        }
+                    })
+                } else {
+                    callback(400, {"Error" : "Token already expired"});
+                }
+            }
+            else {
+                callback(400, "Token doesn't exist");
+            }
+        })
+    } else {
+        callback(400, {"Error": "Incorrect put value"});
+    }
 };
+
+// Req data: id
+// Opt data: none
 handlers._tokens.delete = function(data, callback) {
+    var id = data.payload.id;
 
+    if (id) {
+        _data.read("tokens", id, function(err, data) {
+            if (!err && data) {
+                _data.delete("tokens", id, function(err) {
+                    if (!err) {
+                        callback(200, data);
+                    } else {
+                        callback(500, {"Error" : "Could not delete specified token"});
+                    }
+                });
+
+            } else {
+                callback(404, {"Error" : "Token not exists"});
+            }
+        });
+    } else {
+        callback(400, {"Error" : "Invalid delete request"});
+    }
 };
+
+// Verify if a given token id is currently valid for a given user
+handlers._tokens.verifyToken = function (id, phone, callback){
+    _data.read("tokens", id, function(err, token) {
+        if (!err && token){
+            if (token.phone === phone && token.expires > Date.now()) {
+                callback(true);
+            }
+            else {
+                callback(false);
+            }
+        } else {
+            callback(false);
+        }
+    });
+}
+
 
 handlers.checks = function(data, callback) {
     let methods = [ "post", "get", "put", "delete" ];
@@ -289,7 +409,6 @@ handlers._checks.put = function(data, callback) {
 };
 
 handlers._checks.delete = function(data, callback) {
-
-};
+}
 
 module.exports = handlers;

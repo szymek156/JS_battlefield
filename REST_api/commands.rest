@@ -25,6 +25,7 @@ Content-Type: application/json
 ###
 GET http://localhost:3000/users
 Content-Type: application/json
+token: dx348xjp5dagpm41t8fw
 
 {
     "phone" : "0-700-88-01-88"
@@ -37,12 +38,14 @@ GET http://localhost:3000/users?phone=0-700-88-01-88
 ###
 PUT http://localhost:3000/users
 Content-Type: application/json
+token: dx348xjp5dagpm41t8fw
 
 {
     "firstName" : "Jan",
     "lastName" : "Olaboga",
     "phone" : "0-700-88-01-98"
 }
+
 
 ###
 DELETE http://localhost:3000/users
@@ -53,9 +56,34 @@ Content-Type: application/json
 }
 
 
+###
+POST http://localhost:3000/tokens
+Content-Type: application/json
 
+{
+    "phone" : "0-700-88-01-98",
+    "password" : "qwerty"
+}
 
+###
+PUT http://localhost:3000/tokens
+Content-Type: application/json
 
+{
+    "id" : "98arjmzm0dgwpucunqkg",
+    "extend" : true
+}
+
+###
+DELETE http://localhost:3000/tokens
+Content-Type: application/json
+
+{
+    "id" : "98arjmzm0dgwpucunqkg"
+}
+
+###
+GET http://localhost:3000/tokens?id=98arjmzm0dgwpucunqkg
 
 
 ###

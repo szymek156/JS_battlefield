@@ -17,12 +17,17 @@ const helpers       = require("./lib/helpers");
 // _data.updatePromise2("test", "testFile", {prop2 : "other value promise2"},
 //                      function(err) { console.log("failed with error ", err); });
 
-_data.updatePromise3("test", "testFile", {prop2 : "other value promise3"},
-                     function(err) { console.log("failed with error ", err); });
+// _data.updatePromise3("test", "testFile", {prop2 : "other value promise3"},
+//                      function(err) { console.log("failed with error ", err); });
 // _data.update("test", "testFile", {prop2 : "other value"}, function(err) { console.log("failed
 // with error ", err); }); _data.read("test", "testFile", function(err, data) { console.log("read
 // with status ", err, " data ", data); }); _data.delete("test", "testFile", function(err, data) {
 // console.log("remove with status ", err); });
+
+
+const process = require("process")
+
+process.stdout.write("\x07");
 
 // HTTP
 let httpServer = http.createServer(unifiedServer);
