@@ -10,8 +10,8 @@ const helpers = require("./helpers");
 // function(err, data) { console.log("remove with status ", err); });
 
 var lib = {
-    baseDir : path.join(__dirname, "/../.data"),
-    create : function(dir, filename, data, callback) {
+    baseDir: path.join(__dirname, "/../.data"),
+    create: function(dir, filename, data, callback) {
         fs.open(path.join(lib.baseDir, dir, filename + ".json"), "wx", function(err, fd) {
             if (!err && fd) {
                 let strData = JSON.stringify(data);
@@ -35,7 +35,7 @@ var lib = {
         });
     },
 
-    read : function(dir, file, callback) {
+    read: function(dir, file, callback) {
         fs.readFile(path.join(lib.baseDir, dir, file + ".json"), "utf8", function(err, data) {
             if (!err && data) {
                 let parsedData = helpers.parseJsonToObject(data);
@@ -46,7 +46,7 @@ var lib = {
         });
     },
 
-    update : function(dir, file, data, callback) {
+    update: function(dir, file, data, callback) {
         fs.open(path.join(lib.baseDir, dir, file + ".json"), "r+", function(err, fd) {
             if (!err && fd) {
                 let strData = JSON.stringify(data);
@@ -76,7 +76,7 @@ var lib = {
         });
     },
 
-    delete : function(dir, file, callback) {
+    delete: function(dir, file, callback) {
         fs.unlink(path.join(lib.baseDir, dir, file + ".json"), function(err) {
             if (!err) {
                 callback(false);
@@ -116,7 +116,9 @@ lib.updatePromise = function(dir, file, data, callback) {
             fs.writeSync(fd, strData);
             return fd;
         })
-        .then(function(fd) { fs.closeSync(fd); });
+        .then(function(fd) {
+            fs.closeSync(fd);
+        });
 };
 
 lib.updatePromise2 = function(dir, file, data) {
@@ -165,6 +167,43 @@ lib.updatePromise3 = async function(dir, file, data) {
     } catch (err) {
         console.log("Awesome async/await failed with ", err);
     }
+};
+
+function openp(dir, file) {
+    let promiseOpen = new Promise((resolve, reject) => {
+        fs.open(path.join(lib.baseDir, dir, file + ".json"), "r+", (err, fd) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(fd);
+            }
+        });
+    });
+
+    return promiseOpen;
+}
+
+lib.updatePromise4 = function(dir, file, data) {
+    // promisify on foot:
+
+
+    //    fs.truncate(fd, function(err) {
+    //     if (!err) {
+    //                     fs.write(fd, strData, function(err) {
+    //             if (!err) {
+    //                             fs.close(fd, function(err) {
+    //                     if (!err) {
+    //                         callback(false);
+    //                     } else {
+    //                         callback("Fail during closing a file");
+    //                     }
+
+    let promiseOpen = openp(dir, file);
+    promiseOpen.then((arg) => {}, (err) => {});
+
+    promiseOpen.then((fd) => {
+        return truncatep(fd);
+    });
 };
 
 module.exports = lib;
