@@ -1,6 +1,33 @@
+DELETE  http://localhost:3000/checks
+Content-Type: application/json
+token: dx348xjp5dagpm41t8fw
 
+{
+    "id": "0jbmsia6e9rsckw65ess"
+}
+
+###
+PUT  http://localhost:3000/checks
+Content-Type: application/json
+token: dx348xjp5dagpm41t8fw
+
+{
+    "id": "3s3smffish4gjcfkzjw8",
+    "protocol" : "https",
+    "url" : "www.google.com",
+    "method" : "get",
+    "successCodes" : [200, 204],
+    "timeoutSeconds" : 14
+}
+###
+GET http://localhost:3000/checks?id=3s3smffish4gjcfkzjw8
+Content-Type: application/json
+token: dx348xjp5dagpm41t8fw
+
+###
 POST http://localhost:3000/checks
 Content-Type: application/json
+token: dx348xjp5dagpm41t8fw
 
 {
     "protocol" : "http",
@@ -8,6 +35,19 @@ Content-Type: application/json
     "method" : "get",
     "successCodes" : [200],
     "timeoutSeconds" : 1
+}
+###
+
+POST http://localhost:3000/checks
+Content-Type: application/json
+token: dx348xjp5dagpm41t8fw
+
+{
+    "protocol" : "http",
+    "url" : "www.google.com",
+    "method" : "get",
+    "successCodes" : [200, 204],
+    "timeoutSeconds" : 14
 }
 
 ###

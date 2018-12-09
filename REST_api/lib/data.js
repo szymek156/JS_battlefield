@@ -206,4 +206,19 @@ lib.updatePromise4 = function(dir, file, data) {
     });
 };
 
+lib.list = function(dir, callback) {
+    fs.readdir(path.join(lib.baseDir, dir), function(err, data) {
+        if (!err && data && data.length > 0) {
+            let trimmed = [];
+            data.forEach((filename) => {
+                trimmed.push(filename.replace(".json", ""));
+            });
+
+            callback(false, trimmed);
+        } else {
+            callback(err, data);
+        }
+    })
+};
+
 module.exports = lib;

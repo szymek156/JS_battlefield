@@ -1,7 +1,7 @@
 const _data   = require("./data");
 const _datap  = require("./datap");
 const helpers = require("./helpers");
-const config  = require("../config")
+const config  = require("./config")
 
 // Define handlers
 var handlers = {};
@@ -338,9 +338,10 @@ handlers._checks = {};
 // Req params: protocol, url, method successCodes, timeoutSeconds
 // Opt params: none
 handlers._checks.post = async function(data, callback) {
-    let protocol       = helpers.validateParameter(data.payload.protocol, "string", ["http", "https"]);
-    let url            = helpers.validateParameter(data.payload.url, "string");
-    let method         = helpers.validateParameter(data.payload.method, "string", ["post", "get", "put", "delete"]);
+    let protocol = helpers.validateParameter(data.payload.protocol, "string", ["http", "https"]);
+    let url      = helpers.validateParameter(data.payload.url, "string");
+    let method =
+        helpers.validateParameter(data.payload.method, "string", ["post", "get", "put", "delete"]);
     let successCodes   = helpers.validateParameter(data.payload.successCodes, "object", [], Array);
     let timeoutSeconds = helpers.validateParameter(data.payload.timeoutSeconds, "number");
 
@@ -348,8 +349,8 @@ handlers._checks.post = async function(data, callback) {
         // Get token from headers
 
         try {
-            let token                       = helpers.validateParameter(data.headers.token, "string");
-            let tokenData                   = await _datap.read("tokens", token);
+            let token     = helpers.validateParameter(data.headers.token, "string");
+            let tokenData = await _datap.read("tokens", token);
             let                   userPhone = tokenData.phone;
             let userData                    = await _datap.read("users", userPhone);
 
@@ -376,7 +377,9 @@ handlers._checks.post = async function(data, callback) {
                 callback(200, checkObject);
 
             } else {
-                callback(400, {"Error": `Max checks excceded ${userData.checks.length} >= ${config.maxChecks}`});
+                callback(400, {
+                    "Error": `Max checks excceded ${userData.checks.length} >= ${config.maxChecks}`
+                });
             }
 
         } catch (err) {
@@ -409,9 +412,10 @@ handlers._checks.get = async function(data, callback) {
 };
 
 handlers._checks.put = async function(data, callback) {
-    let protocol       = helpers.validateParameter(data.payload.protocol, "string", ["http", "https"]);
-    let url            = helpers.validateParameter(data.payload.url, "string");
-    let method         = helpers.validateParameter(data.payload.method, "string", ["post", "get", "put", "delete"]);
+    let protocol = helpers.validateParameter(data.payload.protocol, "string", ["http", "https"]);
+    let url      = helpers.validateParameter(data.payload.url, "string");
+    let method =
+        helpers.validateParameter(data.payload.method, "string", ["post", "get", "put", "delete"]);
     let successCodes   = helpers.validateParameter(data.payload.successCodes, "object", [], Array);
     let timeoutSeconds = helpers.validateParameter(data.payload.timeoutSeconds, "number");
 

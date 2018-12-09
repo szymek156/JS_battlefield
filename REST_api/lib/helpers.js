@@ -1,5 +1,5 @@
 const crypto      = require("crypto");
-const config      = require("../config");
+const config      = require("./config");
 const https       = require("https");
 const querystring = require("querystring");
 
@@ -11,63 +11,50 @@ helpers.hash = function(str) {
 };
 
 helpers.parseJsonToObject = function(str) {
-    try
-    {
+    try {
         let obj = JSON.parse(str);
         return obj;
-    }
-    catch (err)
-    {
+    } catch (err) {
         return {};
     }
 };
 
 helpers.createRandomString = function(strLen) {
-    if (strLen)
-    {
+    if (strLen) {
         let possibleChars = "abcdefghijklmnopqrstuvwxyz0123456s789";
         let str           = "";
 
-        for (let i = 1; i <= strLen; i++)
-        {
+        for (let i = 1; i <= strLen; i++) {
             let randomChar = possibleChars.charAt(Math.floor(Math.random() * possibleChars.length));
 
             str += randomChar;
         }
 
         return str;
-    }
-    else
-    {
+    } else {
         return false;
     }
 };
 
 helpers.validateParameter = function(parameter, type, possibleValues = [], instance = undefined) {
-    if (typeof (parameter) !== type)
-    {
+    if (typeof (parameter) !== type) {
         return false;
     }
 
-    if (typeof (parameter) === "string")
-    {
+    if (typeof (parameter) === "string") {
         parameter = parameter.trim();
-        if (parameter.length == 0)
-        {
+        if (parameter.length == 0) {
             return false;
         }
     }
 
-    if (possibleValues.length > 0)
-    {
-        if (possibleValues.indexOf(parameter) == -1)
-        {
+    if (possibleValues.length > 0) {
+        if (possibleValues.indexOf(parameter) == -1) {
             return false;
         }
     }
 
-    if (instance && !parameter instanceof instance)
-    {
+    if (instance && !parameter instanceof instance) {
         return false;
     }
 
@@ -79,8 +66,7 @@ helpers.sendTwilioSms = async function(phone, msg) {
         phone = this.validateParameter(phone, "string");
         msg   = this.validateParameter(msg, "string");
 
-        if (!(phone && msg))
-        {
+        if (!(phone && msg)) {
             reject("Wrong parameters");
         }
 
@@ -102,12 +88,9 @@ helpers.sendTwilioSms = async function(phone, msg) {
 
         let req = https.request(requestDetails, function(res) {
             let status = res.statusCode;
-            if (status == 200)
-            {
+            if (status == 200) {
                 resolve(res);
-            }
-            else
-            {
+            } else {
                 reject(res);
             }
         });
